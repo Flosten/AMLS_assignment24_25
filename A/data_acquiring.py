@@ -3,7 +3,7 @@ import os
 import numpy as np
 
 
-def load_datasets(fder_name: str, file_name: str, data_type: str):
+def A_load_datasets(fder_name: str, file_name: str, data_type: str):
     """
     General function to load different parts of the dataset (train, val, test).
 
@@ -27,7 +27,7 @@ def load_datasets(fder_name: str, file_name: str, data_type: str):
 
 
 # Wrappers for specific data types
-def train_image_acquire(fder_name: str, file_name: str):
+def A_train_image_acquire(fder_name: str, file_name: str):
     """
     Acquire training images and labels.
 
@@ -41,7 +41,7 @@ def train_image_acquire(fder_name: str, file_name: str):
     return load_datasets(fder_name, file_name, "train")
 
 
-def val_image_acquire(fder_name: str, file_name: str):
+def A_val_image_acquire(fder_name: str, file_name: str):
     """
     Acquire validation images and labels.
 
@@ -55,7 +55,7 @@ def val_image_acquire(fder_name: str, file_name: str):
     return load_datasets(fder_name, file_name, "val")
 
 
-def test_image_acquire(fder_name: str, file_name: str):
+def A_test_image_acquire(fder_name: str, file_name: str):
     """
     Acquire test images and labels.
 

@@ -4,6 +4,7 @@ import torch.optim as optim
 from A.data_acquiring import *
 from A.image_processing import *
 from A.visualising import *
+from B.data_acquiring import *
 
 
 def random_seed(seed: int):
@@ -24,9 +25,9 @@ def random_seed(seed: int):
 def task_A():
 
     # Load the data
-    train_images, train_labels = train_image_acquire("BreastMNIST", "breastmnist.npz")
-    val_images, val_labels = val_image_acquire("BreastMNIST", "breastmnist.npz")
-    test_image, test_labels = test_image_acquire("BreastMNIST", "breastmnist.npz")
+    train_images, train_labels = A_train_image_acquire("BreastMNIST", "breastmnist.npz")
+    val_images, val_labels = A_val_image_acquire("BreastMNIST", "breastmnist.npz")
+    test_image, test_labels = A_test_image_acquire("BreastMNIST", "breastmnist.npz")
     # print(len(train_images), len(val_images), len(test_image))
 
     # # SVM
@@ -135,6 +136,11 @@ def task_A():
     cnn_test_ax.plot()
     plt.show()
     # cnn_test_fig.savefig("CNN_confusion_matrix.png")
+
+
+def task_B():
+    # load the bloodmnist data
+    train_images, train_labels = train_image_acquire("BloodMNIST", "bloodmnist.npz")
 
 
 if __name__ == "__main__":
