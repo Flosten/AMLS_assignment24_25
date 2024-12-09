@@ -38,7 +38,7 @@ def A_train_image_acquire(fder_name: str, file_name: str):
     Returns:
         Training images and labels.
     """
-    return load_datasets(fder_name, file_name, "train")
+    return A_load_datasets(fder_name, file_name, "train")
 
 
 def A_val_image_acquire(fder_name: str, file_name: str):
@@ -52,7 +52,7 @@ def A_val_image_acquire(fder_name: str, file_name: str):
     Returns:
         Validation images and labels.
     """
-    return load_datasets(fder_name, file_name, "val")
+    return A_load_datasets(fder_name, file_name, "val")
 
 
 def A_test_image_acquire(fder_name: str, file_name: str):
@@ -66,4 +66,4 @@ def A_test_image_acquire(fder_name: str, file_name: str):
     Returns:
         Test images and labels.
     """
-    return load_datasets(fder_name, file_name, "test")
+    return A_load_datasets(fder_name, file_name, "test")
