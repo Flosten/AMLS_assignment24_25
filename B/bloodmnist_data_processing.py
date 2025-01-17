@@ -1,43 +1,36 @@
+"""
+Module for processing the BloodMNIST dataset
+
+This file is used for preprocessing images in the BloodMNIST dataset and 
+building a CNN model for blood cell image classification.
+
+Functions:
+    blood_image_preprocess_for_cnn: Preprocess the data for the CNN model
+    blood_cnn_params_init: Initialize the CNN model parameters(weights and bias)
+    BloodCNN: Build a CNN architecture for the blood cell classification task
+    blood_cnn_train: Train the CNN model
+    blood_image_cnn_test: Test the CNN model
+"""
+
 import numpy as np
 import torch
 import torch.nn as nn
-from sklearn.decomposition import PCA
-from sklearn.metrics import accuracy_score
-from sklearn.preprocessing import StandardScaler
 from torch import optim
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
-from B.bloodmnist_visualising import B_model_evaluation, B_train_val_loss_plot
-
-
-def B_image_preprocess(images: np.ndarray, labels: np.ndarray):
-
-    images = images.reshape(images.shape[0], -1)
-    labels = labels.flatten()
-
-    return images, labels
-
-
-def B_image_scaling(images: np.ndarray):
-
-    scalar = StandardScaler()
-    images = scalar.fit_transform(images)
-
-    return images, scalar
-
-
-def B_PCA_preprocess(train_images: np.ndarray, rate: float):
-
-    pca = PCA(rate)
-    train_images_pca = pca.fit_transform(train_images)
-    # print(f"PCA: {train_images_pca.shape[1]}")
-
-    return train_images_pca, pca
+from B.bloodmnist_result_visualising import b_model_evaluation, b_train_val_loss_plot
 
 
 # CNN
-class blood_cnn(nn.Module):
+class BloodCNN(nn.Module):
+    """
+    Build a CNN architecture for the blood cell classification task.
+
+    Attributes:
+        num_classes (int): The number of classes in the dataset.
+    """
+
     def __init__(self, num_classes: int):
         super().__init__()
         self.features = nn.Sequential(
@@ -61,6 +54,15 @@ class blood_cnn(nn.Module):
         )
 
     def forward(self, x: torch.Tensor):
+        """
+        Forward pass of the CNN model.
+
+        Args:
+            x (torch.Tensor): The input tensor.
+
+        Returns:
+            torch.Tensor: The output tensor.
+        """
         x = self.features(x)
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
@@ -69,7 +71,7 @@ class blood_cnn(nn.Module):
 
 def blood_cnn_params_init(model: nn.Module):
     """
-    Initialize the CNN model parameters with best practices.
+    Initialize the CNN model parameters.
 
     Args:
         model (nn.Module): The CNN model to be initialized.
@@ -85,6 +87,7 @@ def blood_cnn_params_init(model: nn.Module):
             # He initialization
             nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             if m.bias is not None:
+                # initialize the bias to 0
                 nn.init.constant_(m.bias, 0)
 
 
@@ -132,6 +135,26 @@ def blood_cnn_train(
     optimizer: optim.Adam,
     num_epochs: int,
 ):
+    """
+    Train the CNN model.
+
+    Args:
+        model (nn.Module): The CNN model with parameter initialization completed
+        train_loader (DataLoader): The DataLoader for the training set.
+        val_loader (DataLoader): The DataLoader for the validation set.
+        criterion (nn.CrossEntropyLoss): The loss function (use CrossEntropyLoss).
+        optimizer (optim.Adam): The optimizer.
+        num_epochs (int): The number of epochs for training.
+
+    Returns:
+        tuple:
+            - matplotlib.figure.Figure:
+                The figure object for the learning curve.
+            - matplotlib.axes.Axes:
+                The axes object for the learning curve.
+            - nn.Module:
+                The trained CNN model.
+    """
     train_loss = []
     val_loss = []
 
@@ -158,7 +181,7 @@ def blood_cnn_train(
         # validation set -> adjust the hyperparameters
         model.eval()
         running_loss = 0.0
-        total = 0
+        # total = 0
 
         with torch.no_grad():
             for (
@@ -171,60 +194,7 @@ def blood_cnn_train(
 
         epoch_loss_val = running_loss / len(val_loader.dataset)
         val_loss.append(epoch_loss_val)
-    fig, ax = B_train_val_loss_plot(train_loss, val_loss)
-
-    return fig, ax, model
-
-
-def blood_cnn_train_steplr(
-    model: nn.Module,
-    train_loader: DataLoader,
-    val_loader: DataLoader,
-    criterion: nn.CrossEntropyLoss,
-    optimizer: optim.Adam,
-    num_epochs: int,
-    scheduler: optim.lr_scheduler.StepLR,
-):
-    train_loss = []
-    val_loss = []
-
-    # train set -> train the model
-    for epoch in range(num_epochs):
-        model.train()
-        running_loss = 0.0
-        for inputs_train, labels_train in tqdm(
-            train_loader, desc=f"epoch:{epoch+1} / {num_epochs}", unit="batch"
-        ):
-            optimizer.zero_grad()
-            outputs_train = model(inputs_train)
-
-            loss = criterion(outputs_train, labels_train)
-            loss.backward()
-
-            optimizer.step()
-            running_loss += loss.item() * inputs_train.size(0)
-
-        epoch_loss_train = running_loss / len(train_loader.dataset)
-        train_loss.append(epoch_loss_train)
-        print(f"epoch:{epoch+1} / {num_epochs}  Train Loss: {epoch_loss_train:.4f}")
-
-        # validation set -> adjust the hyperparameters
-        model.eval()
-        running_loss = 0.0
-        total = 0
-
-        with torch.no_grad():
-            for (
-                inputs,
-                labels,
-            ) in val_loader:
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
-                running_loss += loss.item() * inputs.size(0)
-
-        epoch_loss_val = running_loss / len(val_loader.dataset)
-        val_loss.append(epoch_loss_val)
-    fig, ax = B_train_val_loss_plot(train_loss, val_loss)
+    fig, ax = b_train_val_loss_plot(train_loss, val_loss)
 
     return fig, ax, model
 
@@ -232,6 +202,27 @@ def blood_cnn_train_steplr(
 def blood_image_cnn_test(
     model: nn.Module, test_loader: DataLoader, criterion: nn.CrossEntropyLoss
 ):
+    """
+    Test the CNN model.
+
+    Args:
+        model (nn.Module): The trained CNN model.
+        test_loader (DataLoader): The DataLoader for the test set.
+        criterion (nn.CrossEntropyLoss): The loss function(use CrossEntropyLoss).
+
+    Returns:
+        tuple:
+            - float:
+                The loss of the CNN model on the test set.
+            - matplotlib.figure.Figure:
+                The figure object for the confusion matrix of the test results.
+            - matplotlib.axes.Axes:
+                The axes object for the confusion matrix of the test results.
+            - float:
+                The accuracy of the CNN model on the test set.
+            - float:
+                The AUC of the CNN model on the test set.
+    """
     model.eval()
     running_loss = 0.0
     all_preds = []
@@ -256,7 +247,7 @@ def blood_image_cnn_test(
     all_scores = torch.cat(all_scores).numpy()
 
     # evaluate the model
-    test_fig, test_ax, accuracy, auc = B_model_evaluation(
+    test_fig, test_ax, accuracy, auc = b_model_evaluation(
         all_labels, all_preds, all_scores
     )
     test_loss = running_loss / len(test_loader.dataset)
